@@ -1,0 +1,14 @@
+emerg :0
+alert :0
+0
+crit :0
+0
+err :0
+0
+warning :0
+0
+notice :0
+0
+info :2166
+2166
+debug :2166
