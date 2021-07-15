@@ -107,7 +107,7 @@ FILE *crearServicio(const char *servicio) {
             if(fgets(line, size_line = sizeof(line), fPrioridad) != NULL){
                 numMensajes = line;
             }
-            
+            //semaforos para copiar cada respuesta a un array y mandar el array por pipes
             pthread_mutex_lock(&lock);
             strcat(resultado, nomPrioridad);
             strcat(resultado, espacios);
@@ -124,17 +124,19 @@ FILE *crearServicio(const char *servicio) {
 
 
 int main(int argc, char **argv) {
-
+    system("clear");
+    printf("----Cuando termine de escribir los servicios a monitorear escriba exit----\n");
     FILE *fServicio;
     if ((fServicio = fopen("servicios.txt","w")) == NULL){
         perror("No se puso arbir el archivo de servicio");
     }
     fprintf(fServicio, "Log Program\n");
     fclose(fServicio);
-    system("clear");
+    
     char str1[10000];
     FILE *p;
     char ch;
+    int procesos =0;
     while (fgets(str1, sizeof str1, stdin) == str1 && strcmp(str1, "exit\n") != 0){
         str1[strcspn(str1, "\n")] = 0;
         int wstatus;
@@ -149,14 +151,14 @@ int main(int argc, char **argv) {
         if (ch_pid == 0) {
             
             p = crearServicio(str1);
-            if( p == NULL)
+            /*if( p == NULL)
             {
                 puts("No se pudo abrir el archivo");
                 return(1);
             }
             while( (ch=fgetc(p)) != EOF)
                 putchar(ch);
-            pclose(p);
+            pclose(p);*/
             exit(EXIT_SUCCESS);
         }
 
@@ -169,6 +171,5 @@ int main(int argc, char **argv) {
 
         
     }
-    exit(EXIT_SUCCESS);
     return 0;
 }

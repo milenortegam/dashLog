@@ -11,17 +11,6 @@ notice :0
 info :2316
 debug :2316
 --------------------
-speech-dispatcher
---------------------
-emerg :0
-alert :0
-crit :0
-err :0
-warning :0
-notice :0
-info :1474
-debug :1474
---------------------
 postgresql
 --------------------
 emerg :0
