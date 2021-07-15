@@ -1,14 +1,34 @@
+Log Program
+--------------------
+cups
+--------------------
 emerg :0
 alert :0
-0
 crit :0
-0
 err :0
-0
 warning :0
-0
 notice :0
-0
-info :2166
-2166
-debug :2166
+info :2316
+debug :2316
+--------------------
+speech-dispatcher
+--------------------
+emerg :0
+alert :0
+crit :0
+err :0
+warning :0
+notice :0
+info :1474
+debug :1474
+--------------------
+postgresql
+--------------------
+emerg :0
+alert :0
+crit :0
+err :0
+warning :0
+notice :0
+info :385
+debug :385

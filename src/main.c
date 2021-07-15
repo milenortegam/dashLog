@@ -5,7 +5,6 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <limits.h>
-
 #define _GNU_SOURCE
 #include <pthread.h>
 #define numPrioridades 8
@@ -44,7 +43,6 @@ void* crearPrioridad(void* prioridadData) {
 	char *s5 = "| wc -c"; 
 	char *comando = concatenate(s1, s2, s3, s4, s5);
     FILE *p = popen(comando, "r");
-    
     free(comando);
     free(prioridadData);
     return (void *)p;
@@ -55,7 +53,11 @@ FILE *crearServicio(const char *servicio) {
     
     pthread_t th[numPrioridades];
     int i;
-
+    pthread_mutex_t lock;
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        perror("mutex init failed");
+    }
     for (i = 0; i < numPrioridades; i++) {
          
         Prioridad *prioridadData = (Prioridad *)malloc(sizeof(Prioridad));
@@ -69,21 +71,21 @@ FILE *crearServicio(const char *servicio) {
         }
     }
         FILE *fServicio;
+        char *header= "--------------------\n";
+        
         if ((fServicio = fopen("servicios.txt","a")) == NULL){
-                printf("No se puso arbir el archivo de servicio");
-                exit(1);
+                perror("No se puso arbir el archivo de servicio");
         }
+        fprintf(fServicio, "%s" ,header);
+        fprintf(fServicio, "%s" ,servicio);
+        fprintf(fServicio, "\n");
+        fprintf(fServicio, "%s" ,header);
 
         for (i = 0; i < numPrioridades; i++) {
             FILE *fPrioridad;
 
-            int BUFF_SIZE = 1024;
-            int size_line; 
-            char line[BUFF_SIZE];
-            char* resultado = (char*) malloc(BUFF_SIZE * sizeof(char));
-
             
-
+            
             if (pthread_join(th[i], (void **) &fPrioridad) != 0) {
                 perror("Error uniendo el hilo");
             }
@@ -91,7 +93,14 @@ FILE *crearServicio(const char *servicio) {
             {
                 perror("No se pudo abrir el archivo");
             }
-
+            
+            int BUFF_SIZE = 1024;
+            int size_line; 
+            char line[BUFF_SIZE];
+            
+            char *resultado = (char*) malloc(BUFF_SIZE * sizeof(char));
+            
+            
             char *nomPrioridad = nivelPrioridad[i]; 
             char *espacios = " :";
             char *numMensajes;
@@ -99,18 +108,29 @@ FILE *crearServicio(const char *servicio) {
                 numMensajes = line;
             }
             
+            pthread_mutex_lock(&lock);
             strcat(resultado, nomPrioridad);
             strcat(resultado, espacios);
             strcat(resultado, numMensajes);
             pclose(fPrioridad);
             fprintf(fServicio,"%s",resultado);
+            pthread_mutex_unlock(&lock);
+            free(resultado);
         }
+        pthread_mutex_destroy(&lock);
         return fServicio;
     
 }
 
 
 int main(int argc, char **argv) {
+
+    FILE *fServicio;
+    if ((fServicio = fopen("servicios.txt","w")) == NULL){
+        perror("No se puso arbir el archivo de servicio");
+    }
+    fprintf(fServicio, "Log Program\n");
+    fclose(fServicio);
     system("clear");
     char str1[10000];
     FILE *p;
