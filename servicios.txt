@@ -8,10 +8,10 @@ crit :0
 err :0
 warning :0
 notice :0
-info :2316
-debug :2316
+info :2466
+debug :2466
 --------------------
-postgresql
+syslog
 --------------------
 emerg :0
 alert :0
@@ -19,5 +19,5 @@ crit :0
 err :0
 warning :0
 notice :0
-info :385
-debug :385
+info :0
+debug :0

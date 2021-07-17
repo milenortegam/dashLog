@@ -8,6 +8,7 @@
 #define _GNU_SOURCE
 #include <pthread.h>
 #define numPrioridades 8
+#define numActualizaciones 5
 
 char *nivelPrioridad[8] = {"emerg", "alert", "crit", "err", "warning", "notice", "info", "debug"};
 
@@ -74,7 +75,7 @@ FILE *crearServicio(const char *servicio) {
         char *header= "--------------------\n";
         
         if ((fServicio = fopen("servicios.txt","a")) == NULL){
-                perror("No se puso arbir el archivo de servicio");
+                perror("No se puso abrnvir el archivo de servicio");
         }
         fprintf(fServicio, "%s" ,header);
         fprintf(fServicio, "%s" ,servicio);
@@ -124,52 +125,79 @@ FILE *crearServicio(const char *servicio) {
 
 
 int main(int argc, char **argv) {
+    
     system("clear");
     printf("----Cuando termine de escribir los servicios a monitorear escriba exit----\n");
-    FILE *fServicio;
-    if ((fServicio = fopen("servicios.txt","w")) == NULL){
-        perror("No se puso arbir el archivo de servicio");
-    }
-    fprintf(fServicio, "Log Program\n");
-    fclose(fServicio);
     
+    
+    int maxNServicios=10;
+    char **nomServicios=malloc(maxNServicios * sizeof(char*));;
     char str1[10000];
     FILE *p;
     char ch;
-    int procesos =0;
+    int numServicios=0;
     while (fgets(str1, sizeof str1, stdin) == str1 && strcmp(str1, "exit\n") != 0){
-        str1[strcspn(str1, "\n")] = 0;
-        int wstatus;
-        pid_t ch_pid = fork();
-
-        
-        if (ch_pid == -1) {
-            perror("fork");
-            exit(EXIT_FAILURE);
-        }
-
-        if (ch_pid == 0) {
+            str1[strcspn(str1, "\n")] = 0;
             
-            p = crearServicio(str1);
-            /*if( p == NULL)
+            nomServicios[numServicios] = malloc((sizeof(str1)) * sizeof(char));
+            strcpy(nomServicios[numServicios], str1);
+            numServicios++;
+    }
+    int iteracion=0;
+    for(int j = 0; j<numActualizaciones; j++){
+        FILE *fServicio;
+        if ((fServicio = fopen("servicios.txt","w")) == NULL){
+            perror("No se puso arbir el archivo de servicio");
+        }
+        fprintf(fServicio, "Log Program\n");
+        fclose(fServicio);
+        for(int i =0; i<numServicios; i++){
+            
+            int wstatus;
+            pid_t ch_pid = fork();
+
+            
+            if (ch_pid == -1) {
+                perror("fork");
+                exit(EXIT_FAILURE);
+            }
+        
+            if (ch_pid == 0) {
+                
+                p = (FILE *)crearServicio(nomServicios[i]);
+                if( p == NULL)
+                    {
+                        puts("No se pudo abrir el archivo");
+                        return(1);
+                    }
+                while( (ch=fgetc(p)) != EOF)
+                        putchar(ch);
+                pclose(p);
+                exit(EXIT_SUCCESS);
+            }
+
+            
+            if (waitpid(ch_pid, &wstatus, WUNTRACED | WCONTINUED) == -1) {
+                perror("waitpid");
+                exit(EXIT_FAILURE);
+            }
+            
+            
+        }
+        
+        system("clear");
+        p = fopen("servicios.txt", "r");
+        if( p == NULL)
             {
                 puts("No se pudo abrir el archivo");
                 return(1);
             }
-            while( (ch=fgetc(p)) != EOF)
+        while( (ch=fgetc(p)) != EOF)
                 putchar(ch);
-            pclose(p);*/
-            exit(EXIT_SUCCESS);
-        }
-
-        
-        if (waitpid(ch_pid, &wstatus, WUNTRACED | WCONTINUED) == -1) {
-            perror("waitpid");
-            exit(EXIT_FAILURE);
-        }
-        
-
-        
+        printf("iteracion: %d\n",++iteracion);
+        pclose(p);
+        sleep(5);
     }
+    free(nomServicios);
     return 0;
 }
