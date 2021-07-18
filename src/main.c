@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <limits.h>
-#define _GNU_SOURCE
+#include <semaphore.h>
 #include <pthread.h>
 #define numPrioridades 8
 #define numActualizaciones 5
@@ -55,6 +55,13 @@ FILE *crearServicio(const char *servicio) {
     pthread_t th[numPrioridades];
     int i;
     pthread_mutex_t lock;
+
+    sem_t empty;
+    sem_t full;
+    int countEmpty = 8;
+    int countFull = 0;
+    sem_init(&empty, 0, countEmpty);
+    sem_init(&full, 0, countFull);
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
         perror("mutex init failed");
@@ -67,9 +74,12 @@ FILE *crearServicio(const char *servicio) {
         }
         strcpy(prioridadData->servicio,servicio);
         prioridadData->nivel = i;
+        
+        sem_wait(&empty);
         if (pthread_create(&th[i], NULL, crearPrioridad, (void*) prioridadData) != 0) {
             perror("Error creando el hilo");
         }
+        sem_post(&full);
     }
         FILE *fServicio;
         char *header= "--------------------\n";
@@ -83,6 +93,7 @@ FILE *crearServicio(const char *servicio) {
         fprintf(fServicio, "%s" ,header);
 
         for (i = 0; i < numPrioridades; i++) {
+            sem_wait(&full);
             FILE *fPrioridad;
 
             
@@ -90,6 +101,7 @@ FILE *crearServicio(const char *servicio) {
             if (pthread_join(th[i], (void **) &fPrioridad) != 0) {
                 perror("Error uniendo el hilo");
             }
+            sem_post(&empty);
             if( fPrioridad == NULL)
             {
                 perror("No se pudo abrir el archivo");
@@ -108,7 +120,6 @@ FILE *crearServicio(const char *servicio) {
             if(fgets(line, size_line = sizeof(line), fPrioridad) != NULL){
                 numMensajes = line;
             }
-            //semaforos para copiar cada respuesta a un array y mandar el array por pipes
             pthread_mutex_lock(&lock);
             strcat(resultado, nomPrioridad);
             strcat(resultado, espacios);
